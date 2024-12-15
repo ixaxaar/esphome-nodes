@@ -1,0 +1,115 @@
+esphome:
+  name: lilygo-tqt
+  friendly_name: LILYGO T-QT Display
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  - platform: esphome
+    password: "***REMOVED***"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Lilygo-Tqt Fallback Hotspot"
+    password: "your_fallback_password"
+
+# Sync time with NTP
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: "Asia/Kolkata"
+    # on_time:
+    #   - seconds: 0
+    #     minutes: /1 # Every minute
+    #     then:
+    #       - display.update: my_display
+
+# Define the SPI display with correct pins
+spi:
+  clk_pin: GPIO3 # PIN_D5 (SCLK)
+  mosi_pin: GPIO2 # PIN_D7 (MOSI)
+  miso_pin: GPIO12 # PIN_D6 (MISO)
+
+display:
+  - platform: ili9xxx
+    model: gc9a01a
+    auto_clear_enabled: true
+    invert_colors: true
+    transform:
+      mirror_x: true
+      mirror_y: true
+    id: my_display
+    cs_pin: GPIO5 # PIN_D8 (CS)
+    dc_pin: GPIO6 # PIN_D3 (DC)
+    reset_pin: GPIO1 # PIN_D4 (RST)
+    lambda: |-
+      // Create random mosaic background
+      const int tile_size = 32;
+      const int num_tiles_x = 128 / tile_size;
+      const int num_tiles_y = 128 / tile_size;
+
+      for(int x = 0; x < num_tiles_x; x++) {
+        for(int y = 0; y < num_tiles_y; y++) {
+          uint8_t r = 128 + (random() % 128);
+          uint8_t g = 128 + (random() % 128);
+          uint8_t b = 128 + (random() % 128);
+
+          it.filled_rectangle(
+            x * tile_size,
+            y * tile_size,
+            tile_size,
+            tile_size,
+            Color(r, g, b)
+          );
+        }
+      }
+
+      // Add semi-transparent overlay
+      it.filled_rectangle(20, 25, 95, 80, Color(255, 255, 255, 50));
+
+      // Get current time
+      auto time = id(sntp_time).now();
+      if (time.is_valid()) {
+        // Add day of week
+        const char* days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+        it.print(64, 35, id(font1), Color(0, 0, 0), TextAlign::CENTER, days[time.day_of_week]);
+
+        // Draw time
+        char time_str[9];
+        sprintf(time_str, "%02d : %02d", time.hour, time.minute);
+        it.print(64, 60, id(font2), Color(0, 0, 0), TextAlign::CENTER, time_str);
+
+        // Draw date
+        char date_str[11];
+        sprintf(date_str, "%02d-%02d-%04d", time.day_of_month, time.month, time.year);
+        it.print(64, 90, id(font1), Color(0, 0, 0), TextAlign::CENTER, date_str);
+      }
+
+font:
+  - file: "gfonts://Roboto"
+    id: font1
+    size: 14
+
+  - file: "gfonts://Pattaya"
+    id: font2
+    size: 28
+
+binary_sensor:
+  - platform: gpio
+    pin: GPIO16 # PIN_D0 (WAKE)
+    name: "Button"
+    on_press:
+      - display.page.show_next: my_display
