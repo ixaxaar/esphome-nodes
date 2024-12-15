@@ -1,0 +1,18 @@
+version: '3'
+services:
+  esphome:
+    container_name: esphome
+    image: ghcr.io/esphome/esphome
+    volumes:
+      - ./config:/config  # This will create a config directory in the same folder as docker-compose.yml
+      - /etc/localtime:/etc/localtime:ro
+    restart: always
+    privileged: true
+    network_mode: host  # Required for device discovery and online status indicators
+    ports:
+      - "6052:6052"  # Dashboard port (only needed for MacOS, as it can't use host network mode)
+    environment:
+      - USERNAME=ixaxaar  # Dashboard login username
+      - PASSWORD=  # Dashboard login password
+      - TZ=UTC  # Set your timezone here
+
