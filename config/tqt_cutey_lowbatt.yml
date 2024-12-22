@@ -1,45 +1,7 @@
 esphome:
   name: lilygo-tqt-lowbatt
   friendly_name: LILYGO T-QT Display
-  on_boot:
-    priority: -100
-    then:
-      - lambda: |-
-          // Get the default screen and clear it
-          auto screen = lv_scr_act();
-          lv_obj_clean(screen);  // Clear any default content
-
-          // Set screen background to black
-          lv_obj_set_style_bg_color(screen, lv_color_make(0, 0, 0), LV_PART_MAIN | LV_STATE_DEFAULT);
-          lv_obj_set_style_bg_opa(screen, LV_OPA_COVER, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-          // Create main container
-          auto container = lv_obj_create(screen);
-          lv_obj_set_size(container, 128, 128);  // Full screen size
-          lv_obj_center(container);
-
-          // Remove container's default background and border
-          lv_obj_set_style_bg_opa(container, LV_OPA_TRANSP, LV_PART_MAIN | LV_STATE_DEFAULT);
-          lv_obj_set_style_border_width(container, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-          // Create time label using built-in LVGL fonts
-          auto time_label = lv_label_create(container);
-          lv_obj_set_style_text_font(time_label, &lv_font_montserrat_20, LV_STATE_DEFAULT);
-          lv_obj_set_style_text_color(time_label, lv_color_make(0xFF, 0xFF, 0xFF), LV_STATE_DEFAULT);
-          lv_obj_center(time_label);  // Center in container
-          lv_obj_align(time_label, LV_ALIGN_CENTER, 0, -15);
-          lv_label_set_text(time_label, "00:00");
-
-          // Create date label
-          auto date_label = lv_label_create(container);
-          lv_obj_set_style_text_font(date_label, &lv_font_montserrat_14, LV_STATE_DEFAULT);
-          lv_obj_set_style_text_color(date_label, lv_color_make(0xFF, 0xFF, 0xFF), LV_STATE_DEFAULT);
-          lv_obj_align(date_label, LV_ALIGN_CENTER, 0, 15);
-          lv_label_set_text(date_label, "00-00-0000");
-
-          // Store label references for updates
-          id(time_label_obj) = time_label;
-          id(date_label_obj) = date_label;
+  # on_boot:
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -79,6 +41,48 @@ spi:
 
 lvgl:
   id: lvgl_1
+  displays:
+    - ili9xxx_display
+  bg_color: 0x1B1B1B
+  pad_all: 0
+  widgets:
+    - meter:
+        id: meter_id
+        height: 100%
+        width: 100%
+        align: center
+        bg_color: 0x1B1B1B
+        scales:
+          angle_range: 270
+          range_from: 0
+          range_to: 23
+          ticks:
+            width: 15
+            count: 24
+            length: 8
+            major:
+              stride: 100
+              length: 5
+              label_gap: 0
+              color: 0x2A2A2A
+          indicators:
+            - tick_style:
+                local: true
+                start_value: 0
+                end_value: 20
+                color_start: 0xff0000
+                color_end: 0x0000ff
+            - line:
+                width: 10
+                color: 0xff00ff
+                value: 20
+                opa: 70%
+            - arc:
+                width: 10
+                color: 0x00ff66
+                end_value: 7
+                opa: 70%
+                r_mod: 15
 
 # Primary display driver
 display:
@@ -88,6 +92,9 @@ display:
     cs_pin: GPIO5 # PIN_D8 (CS)
     dc_pin: GPIO6 # PIN_D3 (DC)
     reset_pin: GPIO1 # PIN_D4 (RST)
+    dimensions:
+      height: 128
+      width: 128
     transform:
       mirror_x: true
       mirror_y: true
@@ -111,22 +118,6 @@ globals:
   - id: date_label_obj
     type: lv_obj_t*
     restore_value: no
-
-# Update the clock every second
-interval:
-  - interval: 1s
-    then:
-      - lambda: |-
-          auto time = id(sntp_time).now();
-          if (time.is_valid()) {
-            char time_str[6];
-            sprintf(time_str, "%02d:%02d", time.hour, time.minute);
-            lv_label_set_text(id(time_label_obj), time_str);
-
-            char date_str[11];
-            sprintf(date_str, "%02d-%02d-%04d", time.day_of_month, time.month, time.year);
-            lv_label_set_text(id(date_label_obj), date_str);
-          }
 
 binary_sensor:
   - platform: gpio
