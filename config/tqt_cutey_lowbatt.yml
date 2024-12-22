@@ -43,7 +43,7 @@ lvgl:
   id: lvgl_1
   displays:
     - ili9xxx_display
-  bg_color: 0x1B1B1B
+  bg_color: 0x181818
   pad_all: 0
   widgets:
     - meter:
@@ -51,7 +51,8 @@ lvgl:
         height: 100%
         width: 100%
         align: center
-        bg_color: 0x1B1B1B
+        bg_color: 0x181818
+        border_width: 0
         scales:
           angle_range: 270
           range_from: 0
@@ -74,15 +75,21 @@ lvgl:
                 color_end: 0x0000ff
             - line:
                 width: 10
-                color: 0xff00ff
+                color: 0xfabd2f
                 value: 20
                 opa: 70%
             - arc:
                 width: 10
-                color: 0x00ff66
-                end_value: 7
+                color: 0xfe8019
+                end_value: 12
                 opa: 70%
-                r_mod: 15
+                r_mod: -26
+            - arc:
+                width: 10
+                color: 0xfb4934
+                end_value: 19
+                opa: 70%
+                r_mod: -12
 
 # Primary display driver
 display:
