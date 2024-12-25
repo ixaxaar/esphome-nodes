@@ -32,6 +32,38 @@ time:
   - platform: sntp
     id: sntp_time
     timezone: "Asia/Kolkata"
+    on_time_sync:
+      then:
+        - script.execute: time_update
+
+interval:
+  - interval: 2s
+    then:
+      - script.execute: time_update
+
+script:
+  - id: time_update
+    then:
+      - lvgl.indicator.update:
+          id: hour_hand
+          value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.hour;
+      - lvgl.indicator.update:
+          id: hour_rainbow
+          end_value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.hour;
+      - lvgl.indicator.update:
+          id: minute_arc
+          end_value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.minute * 24.0 / 60.0;
+      - lvgl.indicator.update:
+          id: second_arc
+          end_value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.second * 24.0 / 60.0;
 
 # Define the SPI display with correct pins
 spi:
@@ -68,23 +100,27 @@ lvgl:
               color: 0x2A2A2A
           indicators:
             - tick_style:
+                id: hour_rainbow
                 local: true
                 start_value: 0
                 end_value: 20
                 color_start: 0xff0000
                 color_end: 0x0000ff
             - line:
+                id: hour_hand
                 width: 10
                 color: 0xfabd2f
                 value: 20
                 opa: 70%
             - arc:
+                id: minute_arc
                 width: 10
                 color: 0xfe8019
                 end_value: 12
                 opa: 70%
                 r_mod: -26
             - arc:
+                id: second_arc
                 width: 10
                 color: 0xfb4934
                 end_value: 19
