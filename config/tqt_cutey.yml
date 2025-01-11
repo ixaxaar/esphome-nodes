@@ -15,7 +15,7 @@ api:
 
 ota:
   - platform: esphome
-    password: "your_password"
+    password: !secret web_password
 
 wifi:
   ssid: !secret wifi_ssid
@@ -24,7 +24,7 @@ wifi:
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
     ssid: "Lilygo-Tqt Fallback Hotspot"
-    password: "your_fallback_password"
+    password: !secret ap_password
 
 # Sync time with NTP
 time:
@@ -36,6 +36,12 @@ time:
     #     minutes: /1 # Every minute
     #     then:
     #       - display.update: my_display
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret web_password
 
 # Define the SPI display with correct pins
 spi:
