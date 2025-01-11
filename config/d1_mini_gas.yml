@@ -61,6 +61,7 @@ sensor:
     accuracy_decimals: 2
     internal: false
     icon: "mdi:gas-cylinder"
+    unit_of_measurement: "ppm"
 
   # Temperature & Humidity Sensor AHT10
   - platform: aht10
