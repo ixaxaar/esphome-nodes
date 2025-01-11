@@ -40,10 +40,10 @@ time:
 # I2C Configuration for AHT10
 i2c:
   - id: bus_a
-    sda: GPIO16
-    scl: GPIO48
+    sda: GPIO38
+    scl: GPIO39
     scan: true
-    # frequency: 10000
+    frequency: 10000
 
 # Sensors
 sensor:
@@ -56,6 +56,7 @@ sensor:
 
   # Temperature & Humidity Sensor AHT10
   - platform: aht10
+    variant: AHT20
     i2c_id: bus_a
     temperature:
       name: "Air Temperature"
@@ -68,7 +69,7 @@ sensor:
 binary_sensor:
   # Gas sensor Digital Output
   - platform: gpio
-    pin: GPIO39
+    pin: GPIO33
     name: "Gas sensor Digital Output"
 
   # Flame Sensor
