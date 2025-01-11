@@ -10,7 +10,7 @@ esp32:
 
 # Enable logging
 logger:
-  level: VERBOSE
+  # level: VERBOSE
 
 # Enable Home Assistant API
 api:
@@ -37,6 +37,12 @@ time:
     #   then:
     #     - script.execute: time_update
 
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: "your_password"
+
 # I2C Configuration for AHT10
 i2c:
   - id: bus_a
@@ -53,6 +59,8 @@ sensor:
     name: "MQ135 Gas Sensor"
     update_interval: 10s
     accuracy_decimals: 2
+    internal: false
+    icon: "mdi:gas-cylinder"
 
   # Temperature & Humidity Sensor AHT10
   - platform: aht10
@@ -60,10 +68,14 @@ sensor:
     i2c_id: bus_a
     temperature:
       name: "Air Temperature"
-      accuracy_decimals: 1
+      accuracy_decimals: 2
+      internal: false
+      icon: "mdi:thermometer"
     humidity:
       name: "Humidity"
-      accuracy_decimals: 1
+      accuracy_decimals: 0
+      internal: false
+      icon: "mdi:water-percent"
     update_interval: 10s
 
 binary_sensor:
@@ -71,8 +83,14 @@ binary_sensor:
   - platform: gpio
     pin: GPIO33
     name: "Gas sensor Digital Output"
+    internal: false
+    icon: "mdi:alert-circle"
+    device_class: gas
 
   # Flame Sensor
   - platform: gpio
     pin: GPIO35
     name: "Flame Sensor"
+    internal: false
+    icon: "mdi:fire"
+    device_class: smoke
