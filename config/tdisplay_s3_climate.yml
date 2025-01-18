@@ -117,31 +117,31 @@ binary_sensor:
 interval:
   - interval: 2s
     then:
-      - script.execute: time_update
+      - script.execute: sensor_update
 
 script:
-  - id: time_update
+  - id: sensor_update
     then:
       - lvgl.indicator.update:
-          id: hour_hand
+          id: temp_hand
           value: !lambda |-
-            auto now = id(sntp_time).now();
-            return (float)now.hour;
+            return id(temperature_sensor).state;
       - lvgl.indicator.update:
-          id: hour_rainbow
+          id: temp_rainbow
           end_value: !lambda |-
-            auto now = id(sntp_time).now();
-            return (float)now.hour;
+            return id(temperature_sensor).state;
       - lvgl.indicator.update:
-          id: minute_arc
+          id: humidity_arc
           end_value: !lambda |-
-            auto now = id(sntp_time).now();
-            return (float)now.minute * 24.0 / 60.0;
+            return id(humidity_sensor).state;
       - lvgl.indicator.update:
-          id: second_arc
+          id: soil_arc
           end_value: !lambda |-
-            auto now = id(sntp_time).now();
-            return (float)now.second * 24.0 / 60.0;
+            return id(soil_moisture_sensor).state;
+      - lvgl.indicator.update:
+          id: rain_arc
+          end_value: !lambda |-
+            return id(rainwater_sensor).state;
 
 # Define the SPI display with correct pins
 spi:
@@ -155,55 +155,68 @@ lvgl:
     - ili9xxx_display
   bg_color: 0x181818
   pad_all: 0
+  style_definitions:
+    - id: style1
+      align: center
+      text_color: 0x000000
   widgets:
     - meter:
         id: meter_id
         height: 100%
         width: 100%
         align: center
-        bg_color: 0x181818
+        bg_color: 0x000000
+        text_color: 0xffffff
         border_width: 0
         scales:
           angle_range: 270
-          range_from: 0
-          range_to: 23
+          range_from: 10
+          range_to: 40
           ticks:
             width: 15
-            count: 24
-            length: 8
+            count: 30 # More ticks for better temperature resolution
+            length: -1
             major:
-              stride: 100
-              length: 5
-              label_gap: 0
+              stride: 5 # Major tick every 5 degrees
+              length: 12
+              width: 2
+              label_gap: 10
               color: 0x2A2A2A
           indicators:
             - tick_style:
-                id: hour_rainbow
+                id: temp_rainbow
                 local: true
-                start_value: 0
-                end_value: 20
-                color_start: 0xff0000
-                color_end: 0x0000ff
+                start_value: 10
+                end_value: 40
+                color_start: 0x00ff00
+                color_end: 0xff0000
             - line:
-                id: hour_hand
+                id: temp_hand
                 width: 10
                 color: 0xfabd2f
-                value: 20
+                value: 25
                 opa: 70%
             - arc:
-                id: minute_arc
-                width: 10
-                color: 0xfe8019
-                end_value: 12
+                id: soil_arc
+                width: 8
+                color: 0x964B00
+                end_value: 100 # Full range for soil moisture percentage
+                opa: 70%
+                r_mod: 16
+            - arc:
+                id: humidity_arc
+                width: 8
+                color: 0x00ffff
+                end_value: 100 # Full range for humidity percentage
                 opa: 70%
                 r_mod: -26
             - arc:
-                id: second_arc
-                width: 10
-                color: 0xfb4934
-                end_value: 19
+                id: rain_arc
+                width: 8
+                color: 0x0000ff
+                end_value: 100 # Full range for rain percentage
                 opa: 70%
-                r_mod: -12
+                r_mod: -36
 
 # Primary display driver
 display:
@@ -219,7 +232,7 @@ display:
     transform:
       mirror_x: true
       mirror_y: true
-    invert_colors: true
+    invert_colors: false
     auto_clear_enabled: false
 
 font:
