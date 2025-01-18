@@ -39,6 +39,10 @@ web_server:
     username: admin
     password: !secret web_password
 
+#######################################################3
+# Sensors
+#######################################################3
+
 # I2C Configuration for AHT10
 i2c:
   - id: bus_a
@@ -47,26 +51,22 @@ i2c:
     scan: true
     frequency: 10000
 
-  # I2C Configuration for BME280
-  - id: bus_b
-    sda: GPIO34
-    scl: GPIO33
-    scan: true
-    frequency: 10000
-
 # Sensors
 sensor:
   # Temperature & Humidity Sensor AHT10
   - platform: aht10
+
     variant: AHT20
     i2c_id: bus_a
     temperature:
       name: "Air Temperature"
+      id: temperature_sensor
       accuracy_decimals: 2
       internal: false
       icon: "mdi:thermometer"
     humidity:
       name: "Humidity"
+      id: humidity_sensor
       accuracy_decimals: 0
       internal: false
       icon: "mdi:water-percent"
@@ -74,6 +74,7 @@ sensor:
 
   # Hygrometer Analog Reading
   - platform: adc
+    id: soil_moisture_sensor
     internal: false
     pin: GPIO17
     name: "Soil Moisture"
@@ -88,6 +89,7 @@ sensor:
 
   # Rainwater Sensor
   - platform: adc
+    id: rainwater_sensor
     internal: false
     pin: GPIO16
     name: "Rain Level"
@@ -100,31 +102,140 @@ sensor:
           - 0.0 -> 0.0
           - 3.3 -> 100.0
 
-  # BME280 Sensor
-  - platform: bme280_i2c
-    i2c_id: bus_b
-    temperature:
-      name: "BME280 Temperature"
-      internal: false
-      accuracy_decimals: 1
-      icon: "mdi:thermometer"
-    pressure:
-      name: "BME280 Pressure"
-      internal: false
-      accuracy_decimals: 1
-      icon: "mdi:gauge"
-    humidity:
-      name: "BME280 Humidity"
-      internal: false
-      accuracy_decimals: 1
-      icon: "mdi:water-percent"
-    # address: 0x77
-    update_interval: 10s
-
 binary_sensor:
   # Hygrometer Digital Output
   - platform: gpio
-    pin: GPIO36
+    pin: GPIO35
     name: "IR Sensor"
     icon: "mdi:water"
     device_class: moisture
+
+#######################################################
+# Display
+#######################################################
+
+interval:
+  - interval: 2s
+    then:
+      - script.execute: time_update
+
+script:
+  - id: time_update
+    then:
+      - lvgl.indicator.update:
+          id: hour_hand
+          value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.hour;
+      - lvgl.indicator.update:
+          id: hour_rainbow
+          end_value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.hour;
+      - lvgl.indicator.update:
+          id: minute_arc
+          end_value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.minute * 24.0 / 60.0;
+      - lvgl.indicator.update:
+          id: second_arc
+          end_value: !lambda |-
+            auto now = id(sntp_time).now();
+            return (float)now.second * 24.0 / 60.0;
+
+# Define the SPI display with correct pins
+spi:
+  clk_pin: GPIO3 # PIN_D5 (SCLK)
+  mosi_pin: GPIO2 # PIN_D7 (MOSI)
+  miso_pin: GPIO12 # PIN_D6 (MISO)
+
+lvgl:
+  id: lvgl_1
+  displays:
+    - ili9xxx_display
+  bg_color: 0x181818
+  pad_all: 0
+  widgets:
+    - meter:
+        id: meter_id
+        height: 100%
+        width: 100%
+        align: center
+        bg_color: 0x181818
+        border_width: 0
+        scales:
+          angle_range: 270
+          range_from: 0
+          range_to: 23
+          ticks:
+            width: 15
+            count: 24
+            length: 8
+            major:
+              stride: 100
+              length: 5
+              label_gap: 0
+              color: 0x2A2A2A
+          indicators:
+            - tick_style:
+                id: hour_rainbow
+                local: true
+                start_value: 0
+                end_value: 20
+                color_start: 0xff0000
+                color_end: 0x0000ff
+            - line:
+                id: hour_hand
+                width: 10
+                color: 0xfabd2f
+                value: 20
+                opa: 70%
+            - arc:
+                id: minute_arc
+                width: 10
+                color: 0xfe8019
+                end_value: 12
+                opa: 70%
+                r_mod: -26
+            - arc:
+                id: second_arc
+                width: 10
+                color: 0xfb4934
+                end_value: 19
+                opa: 70%
+                r_mod: -12
+
+# Primary display driver
+display:
+  - platform: ili9xxx
+    model: gc9a01a
+    id: ili9xxx_display
+    cs_pin: GPIO5 # PIN_D8 (CS)
+    dc_pin: GPIO6 # PIN_D3 (DC)
+    reset_pin: GPIO1 # PIN_D4 (RST)
+    dimensions:
+      height: 128
+      width: 128
+    transform:
+      mirror_x: true
+      mirror_y: true
+    invert_colors: true
+    auto_clear_enabled: false
+
+font:
+  - file: "gfonts://Roboto"
+    id: font1
+    size: 14
+
+  - file: "gfonts://Pattaya"
+    id: font2
+    size: 28
+
+# Store references to LVGL label objects
+globals:
+  - id: time_label_obj
+    type: lv_obj_t*
+    restore_value: no
+  - id: date_label_obj
+    type: lv_obj_t*
+    restore_value: no
