@@ -1,0 +1,114 @@
+esphome:
+  name: xiao-esp32s3-cam
+  friendly_name: XIAO ESP32S3 Camera
+
+  # Required for camera
+  platformio_options:
+    build_flags: -DBOARD_HAS_PSRAM
+    board_build.arduino.memory_type: qio_opi
+    board_build.f_flash: 80000000L
+    board_build.flash_mode: qio
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  - platform: esphome
+    password: !secret web_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot
+  ap:
+    ssid: "XIAO-ESP32S3-Fallback"
+    password: !secret ap_password
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret web_password
+
+# Camera Configuration
+esp32_camera:
+  id: espcam
+  name: sentry_camera
+  external_clock:
+    pin: GPIO10
+    frequency: 20MHz
+  i2c_pins:
+    sda: GPIO40
+    scl: GPIO39
+  data_pins: [GPIO15, GPIO17, GPIO18, GPIO16, GPIO14, GPIO12, GPIO11, GPIO48]
+  vsync_pin: GPIO38
+  href_pin: GPIO47
+  pixel_clock_pin: GPIO13
+  resolution: 800x600
+
+# I2C Configuration for AHT10
+i2c:
+  id: bus_a
+  sda: GPIO21
+  scl: GPIO7
+  scan: true
+  frequency: 10000
+
+i2s_audio:
+  i2s_lrclk_pin: GPIO9 # WS pin
+  i2s_bclk_pin: GPIO8 # SCK pin
+
+# Microphone Configuration
+microphone:
+  - platform: i2s_audio
+    i2s_din_pin: GPIO20
+    id: mic_i2s
+    adc_type: external
+    pdm: false
+    channel: mono
+
+# Sensors
+sensor:
+  # AHT10 Temperature & Humidity
+  - platform: aht10
+    variant: AHT20
+    i2c_id: bus_a
+    temperature:
+      name: "Air Temperature"
+      id: temperature_sensor
+      accuracy_decimals: 2
+      internal: false
+      icon: "mdi:thermometer"
+    humidity:
+      name: "Humidity"
+      id: humidity_sensor
+      accuracy_decimals: 0
+      internal: false
+      icon: "mdi:water-percent"
+    update_interval: 10s
+
+binary_sensor:
+  # RCWL-0516 Radar Sensor
+  - platform: gpio
+    pin: GPIO2 # CUT pin
+    name: "Motion Sensor"
+    device_class: motion
+
+  # Additional pins for RCWL-0516
+output:
+  - platform: gpio
+    pin: GPIO3
+    id: radar_vin
+
+  - platform: gpio
+    pin: GPIO4
+    id: radar_cds
