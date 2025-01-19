@@ -55,7 +55,6 @@ i2c:
 sensor:
   # Temperature & Humidity Sensor AHT10
   - platform: aht10
-
     variant: AHT20
     i2c_id: bus_a
     temperature:
@@ -82,10 +81,6 @@ sensor:
     accuracy_decimals: 1
     icon: "mdi:water-percent"
     unit_of_measurement: "%"
-    filters:
-      - calibrate_linear:
-          - 0.0 -> 0.0
-          - 3.3 -> 100.0
 
   # Rainwater Sensor
   - platform: adc
@@ -97,16 +92,12 @@ sensor:
     accuracy_decimals: 1
     icon: "mdi:weather-rainy"
     unit_of_measurement: "%"
-    filters:
-      - calibrate_linear:
-          - 0.0 -> 0.0
-          - 3.3 -> 100.0
 
 binary_sensor:
   # Hygrometer Digital Output
   - platform: gpio
     pin: GPIO35
-    name: "IR Sensor"
+    name: "Soil Moisture Digital Sensor"
     icon: "mdi:water"
     device_class: moisture
 
