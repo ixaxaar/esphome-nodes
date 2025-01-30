@@ -10,6 +10,27 @@ This repository contains my esphome projects. I use esphome to program my ESP826
 
 ![clock](./assets/tqt_cutey.jpg)
 
+```
+LILYGO T-QT Pro                 Peripherals
++----------------+             +----------------+
+|                |             |    GC9A01A     |
+|         GPIO1  |------------>| RST            |
+|         GPIO2  |------------>| MOSI           |
+|         GPIO3  |------------>| CLK            |
+|         GPIO5  |------------>| CS             |
+|         GPIO6  |------------>| DC             |
+|         GPIO12 |------------>| MISO           |
+|                |             +----------------+
+|                |
+|     Button     |             +----------------+
+|         GPIO16 |<------------| Button Input   |
+|                |             +----------------+
+|                |
+|            3V3 |------------>| VCC            |
+|            GND |------------>| GND            |
++----------------+
+```
+
 2. Climate sensor complex
 
 ![climate](./assets/tqt_climate.jpg)
