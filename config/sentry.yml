@@ -64,13 +64,13 @@ i2c:
   frequency: 10000
 
 i2s_audio:
-  i2s_lrclk_pin: GPIO9 # WS pin
-  i2s_bclk_pin: GPIO8 # SCK pin
+  i2s_lrclk_pin: GPIO8 # WS pin
+  i2s_bclk_pin: GPIO7 # SCK pin
 
 # Microphone Configuration
 microphone:
   - platform: i2s_audio
-    i2s_din_pin: GPIO20
+    i2s_din_pin: GPIO44
     id: mic_i2s
     adc_type: external
     pdm: false
