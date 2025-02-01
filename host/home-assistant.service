@@ -1,0 +1,36 @@
+[Unit]
+Description=Home assistant
+After=network.target
+
+[Service]
+Restart=on-failure
+User=root
+Group=root
+DynamicUser=false
+LogsDirectory=hass
+StateDirectory=hass
+WorkingDirectory=/opt/hass
+Environment=HOME=/opt/hass
+Environment=PATH=/usr/bin:/opt/hass/.venv/bin
+
+ExecStartPre=/usr/bin/python -m venv --upgrade /opt/hass/.venv
+ExecStartPre=/opt/hass/.venv/bin/python -m pip install wheel
+ExecStartPre=/opt/hass/.venv/bin/python -m pip install homeassistant
+ExecStart=/opt/hass/.venv/bin/hass \
+  --config /opt/hass/ \
+  --log-file /var/log/hass/home-assistant.log \
+  --log-rotate-days 1
+RestartForceExitStatus=100
+TimeoutSec=15min
+
+AmbientCapabilities=
+CapabilityBoundingSet=
+LockPersonality=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+
+[Install]
+WantedBy=multi-user.target
+
+
