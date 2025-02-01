@@ -2,7 +2,11 @@
 
 This repository contains my esphome projects. I use esphome to program my ESP8266 and ESP32 devices and integrate them with Home Assistant for a nice dashboard and automation.
 
+## Dashboards
+
 ![dash](./assets/dashboard.png)
+
+![dash2](./assets/dash.jpg)
 
 ## Projects
 
@@ -34,6 +38,8 @@ LILYGO T-QT Pro                 Peripherals
 2. Climate sensor complex
 
 ![climate](./assets/tqt_climate.jpg)
+
+![climate2](./assets/tqt_climate_prod.jpg)
 
 ```
 LILYGO T-QT Pro                 Peripherals
