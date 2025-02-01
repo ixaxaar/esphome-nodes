@@ -58,8 +58,8 @@ esp32_camera:
 # I2C Configuration for AHT10
 i2c:
   id: bus_a
-  sda: GPIO21
-  scl: GPIO7
+  sda: GPIO43
+  scl: GPIO6
   scan: true
   frequency: 10000
 
