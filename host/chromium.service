@@ -1,0 +1,30 @@
+[Unit]
+Description=Chromium Kiosk Display
+After=network-online.target home-assistant.service
+Wants=network-online.target
+
+[Service]
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/ixaxaar/.Xauthority
+User=ixaxaar
+Group=ixaxaar
+Type=simple
+ExecStart=/usr/bin/chromium \
+  --kiosk \
+  --incognito \
+  --noerrdialogs \
+  --disable-translate \
+  --no-first-run \
+  --fast \
+  --fast-start \
+  --disable-infobars \
+  --disable-features=TranslateUI \
+  --disable-pinch \
+  --overscroll-history-navigation=0 \
+  --disable-features=TouchpadOverscrollHistoryNavigation \
+  http://192.168.0.116:8123
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=graphical.target
