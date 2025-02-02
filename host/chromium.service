@@ -11,7 +11,6 @@ Group=ixaxaar
 Type=simple
 ExecStart=/usr/bin/chromium \
   --kiosk \
-  --incognito \
   --noerrdialogs \
   --disable-translate \
   --no-first-run \
