@@ -2,6 +2,17 @@
 
 This repository contains my esphome projects. I use esphome to program my ESP8266 and ESP32 devices and integrate them with Home Assistant for a nice dashboard and automation.
 
+
+- [My esphome projects](#my-esphome-projects)
+    - [Dashboards](#dashboards)
+    - [Projects](#projects)
+        - [Clock](#clock)
+        - [Climate sensor complex](#climate-sensor-complex)
+        - [Seeedstudio XIAO Sentry](#seeedstudio-xiao-sentry)
+        - [Gas sensor complex](#gas-sensor-complex)
+        - [Meshtastic nodes](#meshtastic-nodes)
+        - [USB power hub](#usb-power-hub)
+
 ## Dashboards
 
 ![dash](./assets/dashboard.png)
@@ -10,7 +21,7 @@ This repository contains my esphome projects. I use esphome to program my ESP826
 
 ## Projects
 
-1. Clock
+### Clock
 
 ![clock](./assets/tqt_cutey.jpg)
 
@@ -35,7 +46,7 @@ LILYGO T-QT Pro                 Peripherals
 +----------------+
 ```
 
-2. Climate sensor complex
+### Climate sensor complex
 
 ![climate](./assets/tqt_climate.jpg)
 
@@ -72,7 +83,7 @@ LILYGO T-QT Pro                 Peripherals
 +----------------+
 ```
 
-3. Seeedstudio XIAO Sentry
+### Seeedstudio XIAO Sentry
 
 ![sentry](./assets/sentry.jpg)
 
@@ -117,7 +128,7 @@ XIAO ESP32S3                    Peripherals
 +----------------+
 ```
 
-4. Gas sensor complex
+### Gas sensor complex
 
 ![gas](./assets/gas.jpg)
 
@@ -142,3 +153,11 @@ LILYGO T-QT Pro                 Peripherals
 |            GND |------------>| GND (All)     |
 +----------------+
 ```
+
+### Meshtastic nodes
+
+![meshtastic](./assets/meshtastic.jpg)
+
+### USB power hub
+
+![usb](./assets/usb_hub.jpg)
