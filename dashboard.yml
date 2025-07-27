@@ -1,0 +1,142 @@
+views:
+  - title: Home
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: gauge
+            entity: sensor.lilygo_tqt_climate_humidity_2
+            name: Outside Humidity
+            severity:
+              green: 0
+              yellow: 70
+              red: 80
+            needle: true
+          - type: gauge
+            entity: sensor.lilygo_tqt_gas_air_temperature
+            min: 5
+            max: 40
+            name: Bedroom Temperature
+            severity:
+              green: 0
+              yellow: 25
+              red: 30
+            needle: true
+          - type: gauge
+            entity: sensor.xiao_esp32s3_cam_air_temperature
+            name: Shop Temperature
+            severity:
+              green: 0
+              yellow: 29
+              red: 35
+            needle: true
+            max: 45
+            min: 10
+          - graph: line
+            type: sensor
+            entity: sensor.hl_l2350dw_black_toner_remaining
+            detail: 2
+            grid_options:
+              columns: 12
+              rows: 2
+          - graph: line
+            type: sensor
+            entity: sensor.lilygo_tqt_climate_soil_moisture_2
+            detail: 1
+            name: Soil Moisture
+            grid_options:
+              columns: 6
+          - graph: line
+            type: sensor
+            entity: sensor.lilygo_tqt_climate_rain_level_2
+            detail: 1
+            name: Rain
+            grid_options:
+              columns: 6
+        column_span: 2
+      - type: grid
+        cards:
+          - camera_view: auto
+            type: picture-glance
+            title: Shop
+            entities: []
+            camera_image: camera.xiao_esp32s3_cam_sentry_camera
+            grid_options:
+              columns: 12
+              rows: 6
+          - camera_view: auto
+            type: picture-glance
+            entities: []
+            camera_image: camera.xiao_esp32s3_cam_sentry_camera_3
+            grid_options:
+              columns: 12
+              rows: 6
+          - type: entities
+            entities:
+              - entity: sensor.hl_l2350dw_page_counter
+              - entity: sensor.sun_next_setting
+              - entity: sensor.sun_next_rising
+            grid_options:
+              columns: 12
+              rows: auto
+        column_span: 4
+      - type: grid
+        cards:
+          - type: gauge
+            entity: sensor.lilygo_tqt_climate_air_temperature_2
+            min: 5
+            max: 40
+            needle: true
+            name: Outside Temperature
+            severity:
+              green: 0
+              yellow: 30
+              red: 35
+          - type: gauge
+            entity: sensor.lilygo_tqt_gas_humidity
+            name: Bedroom Humidity
+            severity:
+              green: 0
+              yellow: 70
+              red: 80
+            needle: true
+          - type: gauge
+            entity: sensor.xiao_esp32s3_cam_humidity
+            severity:
+              green: 0
+              yellow: 70
+              red: 80
+            needle: true
+            name: Shop Humidity
+          - type: conditional
+            conditions: []
+            card:
+              type: gauge
+              entity: sensor.lilygo_tqt_gas_mq135_gas_sensor
+              name: Gas sensor
+              unit: ppm
+              max: 1
+              severity:
+                green: 0
+                yellow: 0.5
+                red: 0.7
+          - type: media-control
+            entity: media_player.lol_3093204156
+        column_span: 2
+      - type: grid
+        cards:
+          - show_current: true
+            show_forecast: true
+            type: weather-forecast
+            entity: weather.forecast_home
+            forecast_type: hourly
+          - type: history-graph
+            entities:
+              - entity: sensor.lilygo_tqt_climate_soil_moisture_2
+              - entity: binary_sensor.lilygo_tqt_climate_ir_sensor
+              - entity: sensor.lilygo_tqt_climate_rain_level_2
+            hours_to_show: 12
+            grid_options:
+              columns: 12
+              rows: 8
+        column_span: 2
