@@ -2,6 +2,20 @@ esphome:
   name: xiao-air-quality
   friendly_name: XIAO Air Quality Monitor
 
+# PARTICLE_PM1_0_STANDARD   0x05
+# PARTICLE_PM2_5_STANDARD   0x07
+# PARTICLE_PM10_STANDARD    0x09
+# PARTICLE_PM1_0_ATMOSPHERE 0x0B
+# PARTICLE_PM2_5_ATMOSPHERE 0x0D
+# PARTICLE_PM10_ATMOSPHERE  0x0F
+# PARTICLENUM_0_3_UM_EVERY0_1L_AIR 0x11
+# PARTICLENUM_0_5_UM_EVERY0_1L_AIR 0x13
+# PARTICLENUM_1_0_UM_EVERY0_1L_AIR 0x15
+# PARTICLENUM_2_5_UM_EVERY0_1L_AIR 0x17
+# PARTICLENUM_5_0_UM_EVERY0_1L_AIR 0x19
+# PARTICLENUM_10_UM_EVERY0_1L_AIR  0x1B
+# PARTICLENUM_GAIN_VERSION 0x1D
+
 esp32:
   board: esp32-s3-devkitc-1
   variant: esp32s3
@@ -50,121 +64,285 @@ i2c:
   frequency: 50kHz
   id: bus_a
 
-# Template sensors for PM readings (placeholder until proper sensor driver available)
+# Global variables to track sensor state
+globals:
+  - id: sensor_initialized
+    type: bool
+    restore_value: no
+    initial_value: "false"
+
+# Initialize sensor on boot
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          if (!id(sensor_initialized)) {
+            // Initialize the sensor once
+            Wire.begin();
+            delay(100);
+
+            // Wake up the sensor
+            Wire.beginTransmission(0x19);
+            Wire.write(0x01);  // Mode register
+            Wire.write(0x02);  // Wake command
+            Wire.endTransmission();
+            delay(100);
+
+            id(sensor_initialized) = true;
+            ESP_LOGD("air_quality", "Air Quality Sensor initialized");
+          }
+
 sensor:
+  # PM1.0 Standard
   - platform: template
-    name: "PM1.0"
-    id: pm1_0
+    name: "PM1.0 Standard"
+    id: pm1_0_standard
     unit_of_measurement: "µg/m³"
     icon: "mdi:air-filter"
     accuracy_decimals: 0
     device_class: pm1
     lambda: |-
-      // Direct I2C communication with sensor
-      uint8_t data[32];
+      // Read PM1.0 standard particle concentration
       Wire.beginTransmission(0x19);
-      Wire.write(0x11);  // Wake command
-      Wire.write(0x02);  // Read command  
-      Wire.endTransmission();
-      delay(50);
-      
-      int bytes = Wire.requestFrom(0x19, 32);
-      if (bytes > 0) {
-        for(int i = 0; i < bytes && i < 32; i++) {
-          data[i] = Wire.read();
-        }
-        
-        // Try to find valid PM1.0 data
-        for(int i = 0; i < bytes - 1; i++) {
-          uint16_t val = (data[i] << 8) | data[i+1];
-          if (val > 0 && val < 300) return val;  // PM1.0 usually lower than PM2.5
-        }
+      Wire.write(0x05);  // PARTICLE_PM1_0_STANDARD register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
       }
-      return 0;
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
     update_interval: 30s
 
+  # PM2.5 Standard
   - platform: template
-    name: "PM2.5"
-    id: pm2_5
+    name: "PM2.5 Standard"
+    id: pm2_5_standard
     unit_of_measurement: "µg/m³"
     icon: "mdi:air-filter"
     accuracy_decimals: 0
     device_class: pm25
     lambda: |-
-      // Direct I2C read for PM2.5
-      uint8_t data[32];
+      // Read PM2.5 standard particle concentration
       Wire.beginTransmission(0x19);
-      Wire.write(0x11);
-      Wire.write(0x02);
-      Wire.endTransmission();
-      delay(50);
-      
-      int bytes = Wire.requestFrom(0x19, 32);
-      if (bytes > 0) {
-        for(int i = 0; i < bytes && i < 32; i++) {
-          data[i] = Wire.read();
-        }
-        
-        // Look for PM2.5 data
-        for(int i = 0; i < bytes - 1; i++) {
-          uint16_t val = (data[i] << 8) | data[i+1];
-          if (val > 0 && val < 500) return val;
-        }
+      Wire.write(0x07);  // PARTICLE_PM2_5_STANDARD register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
       }
-      return 0;
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
     update_interval: 5s
 
+  # PM10 Standard
   - platform: template
-    name: "PM10"
-    id: pm10
+    name: "PM10 Standard"
+    id: pm10_standard
     unit_of_measurement: "µg/m³"
     icon: "mdi:air-filter"
     accuracy_decimals: 0
     device_class: pm10
     lambda: |-
-      // Direct I2C read for PM10
-      uint8_t data[32];
+      // Read PM10 standard particle concentration
       Wire.beginTransmission(0x19);
-      Wire.write(0x11);
-      Wire.write(0x02);
-      Wire.endTransmission();
-      delay(50);
-      
-      int bytes = Wire.requestFrom(0x19, 32);
-      if (bytes > 0) {
-        for(int i = 0; i < bytes && i < 32; i++) {
-          data[i] = Wire.read();
-        }
-        
-        // Look for PM10 data (usually highest values)
-        for(int i = 0; i < bytes - 1; i++) {
-          uint16_t val = (data[i] << 8) | data[i+1];
-          if (val > 0 && val < 1000) return val;
-        }
+      Wire.write(0x09);  // PARTICLE_PM10_STANDARD register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
       }
-      return 0;
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
     update_interval: 30s
+
+  # PM1.0 Atmospheric
+  - platform: template
+    name: "PM1.0 Atmospheric"
+    id: pm1_0_atmosphere
+    unit_of_measurement: "µg/m³"
+    icon: "mdi:air-filter"
+    accuracy_decimals: 0
+    lambda: |-
+      // Read PM1.0 atmospheric particle concentration
+      Wire.beginTransmission(0x19);
+      Wire.write(0x0B);  // PARTICLE_PM1_0_ATMOSPHERE register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
+      }
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
+    update_interval: 30s
+
+  # PM2.5 Atmospheric
+  - platform: template
+    name: "PM2.5 Atmospheric"
+    id: pm2_5_atmosphere
+    unit_of_measurement: "µg/m³"
+    icon: "mdi:air-filter"
+    accuracy_decimals: 0
+    lambda: |-
+      // Read PM2.5 atmospheric particle concentration
+      Wire.beginTransmission(0x19);
+      Wire.write(0x0D);  // PARTICLE_PM2_5_ATMOSPHERE register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
+      }
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
+    update_interval: 30s
+
+  # PM10 Atmospheric
+  - platform: template
+    name: "PM10 Atmospheric"
+    id: pm10_atmosphere
+    unit_of_measurement: "µg/m³"
+    icon: "mdi:air-filter"
+    accuracy_decimals: 0
+    lambda: |-
+      // Read PM10 atmospheric particle concentration
+      Wire.beginTransmission(0x19);
+      Wire.write(0x0F);  // PARTICLE_PM10_ATMOSPHERE register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
+      }
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
+    update_interval: 30s
+
+  # Particle counts
+  - platform: template
+    name: "Particles >0.3µm"
+    id: particles_0_3um
+    unit_of_measurement: "/0.1L"
+    icon: "mdi:chart-bubble"
+    accuracy_decimals: 0
+    lambda: |-
+      Wire.beginTransmission(0x19);
+      Wire.write(0x11);  // PARTICLENUM_0_3_UM_EVERY0_1L_AIR register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
+      }
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
+    update_interval: 60s
+
+  - platform: template
+    name: "Particles >0.5µm"
+    id: particles_0_5um
+    unit_of_measurement: "/0.1L"
+    icon: "mdi:chart-bubble"
+    accuracy_decimals: 0
+    lambda: |-
+      Wire.beginTransmission(0x19);
+      Wire.write(0x13);  // PARTICLENUM_0_5_UM_EVERY0_1L_AIR register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
+      }
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
+    update_interval: 60s
+
+  - platform: template
+    name: "Particles >1.0µm"
+    id: particles_1_0um
+    unit_of_measurement: "/0.1L"
+    icon: "mdi:chart-bubble"
+    accuracy_decimals: 0
+    lambda: |-
+      Wire.beginTransmission(0x19);
+      Wire.write(0x15);  // PARTICLENUM_1_0_UM_EVERY0_1L_AIR register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
+      }
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
+    update_interval: 60s
+
+  - platform: template
+    name: "Particles >2.5µm"
+    id: particles_2_5um
+    unit_of_measurement: "/0.1L"
+    icon: "mdi:chart-bubble"
+    accuracy_decimals: 0
+    lambda: |-
+      Wire.beginTransmission(0x19);
+      Wire.write(0x17);  // PARTICLENUM_2_5_UM_EVERY0_1L_AIR register
+      if (Wire.endTransmission() != 0) {
+        return NAN;
+      }
+
+      Wire.requestFrom((uint8_t)0x19, (uint8_t)2);
+      if (Wire.available() >= 2) {
+        uint8_t high = Wire.read();
+        uint8_t low = Wire.read();
+        uint16_t value = ((uint16_t)high << 8) | low;
+        return (float)value;
+      }
+      return NAN;
+    update_interval: 60s
 
   # WiFi Signal Sensor
   - platform: wifi_signal
     name: "WiFi Signal Sensor"
     update_interval: 60s
-
-  # Uptime sensor
-  - platform: uptime
-    name: "Uptime Sensor"
-
-# Text sensors
-text_sensor:
-  - platform: version
-    name: "ESPHome Version"
-  - platform: wifi_info
-    ip_address:
-      name: "IP Address"
-    ssid:
-      name: "Connected SSID"
-    mac_address:
-      name: "MAC Address"
 
 # Status LED
 status_led:
